@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
   Box,
   Drawer,
@@ -9,12 +8,12 @@ import {
   ListItemText,
   Typography,
   Avatar,
-  IconButton,
   Divider,
   Tooltip,
   Stack,
   alpha,
   useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import {
   Home as HomeIcon,
@@ -35,6 +34,8 @@ interface SidebarProps {
   onRoleChange: (role: UserRole) => void;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
+  mobileOpen: boolean;
+  onMobileClose: () => void;
 }
 
 const DRAWER_WIDTH = 280;
@@ -74,43 +75,38 @@ export function Sidebar({
   onRoleChange,
   isCollapsed,
   onToggleCollapse,
+  mobileOpen,
+  onMobileClose,
 }: SidebarProps) {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  
   const availableNavItems = navigationItems.filter((item) =>
     item.roles.includes(currentUser.role)
   );
 
-  const drawerWidth = isCollapsed ? COLLAPSED_WIDTH : DRAWER_WIDTH;
+  const drawerWidth = isMobile ? DRAWER_WIDTH : (isCollapsed ? COLLAPSED_WIDTH : DRAWER_WIDTH);
+  const showCollapsed = !isMobile && isCollapsed;
 
-  return (
-    <Drawer
-      variant="permanent"
-      sx={{
-        width: drawerWidth,
-        flexShrink: 0,
-        '& .MuiDrawer-paper': {
-          width: drawerWidth,
-          boxSizing: 'border-box',
-          background: colors.gradients.primary,
-          border: 'none',
-          transition: theme.transitions.create('width', {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.enteringScreen,
-          }),
-          overflowX: 'hidden',
-        },
-      }}
-    >
+  const handleNavClick = (viewId: string) => {
+    onViewChange(viewId);
+    if (isMobile) {
+      onMobileClose();
+    }
+  };
+
+  const drawerContent = (
+    <>
       {/* Logo / Header */}
       <Box sx={{ p: 3, pb: 2 }}>
         <Stack
           direction="row"
           alignItems="center"
           spacing={2}
-          justifyContent={isCollapsed ? 'center' : 'flex-start'}
+          justifyContent={showCollapsed ? 'center' : 'flex-start'}
         >
           <BusinessIcon sx={{ fontSize: 32, color: 'white' }} />
-          {!isCollapsed && (
+          {!showCollapsed && (
             <Box>
               <Typography
                 variant="h6"
@@ -136,7 +132,7 @@ export function Sidebar({
       </Box>
 
       {/* User Info Card */}
-      {!isCollapsed ? (
+      {!showCollapsed ? (
         <Box
           sx={{
             mx: 2,
@@ -219,15 +215,15 @@ export function Sidebar({
 
           return (
             <ListItem key={item.id} disablePadding sx={{ mb: 0.5 }}>
-              <Tooltip title={isCollapsed ? item.label : ''} placement="right">
+              <Tooltip title={showCollapsed ? item.label : ''} placement="right">
                 <ListItemButton
-                  onClick={() => onViewChange(item.id)}
+                  onClick={() => handleNavClick(item.id)}
                   selected={isActive}
                   sx={{
                     borderRadius: 2,
                     py: 1.25,
-                    px: isCollapsed ? 2 : 2,
-                    justifyContent: isCollapsed ? 'center' : 'flex-start',
+                    px: showCollapsed ? 2 : 2,
+                    justifyContent: showCollapsed ? 'center' : 'flex-start',
                     backgroundColor: isActive ? 'white' : 'transparent',
                     color: isActive ? colors.primary : 'white',
                     '&:hover': {
@@ -243,13 +239,13 @@ export function Sidebar({
                 >
                   <ListItemIcon
                     sx={{
-                      minWidth: isCollapsed ? 0 : 40,
+                      minWidth: showCollapsed ? 0 : 40,
                       color: isActive ? colors.primary : 'white',
                     }}
                   >
                     <Icon />
                   </ListItemIcon>
-                  {!isCollapsed && (
+                  {!showCollapsed && (
                     <ListItemText
                       primary={item.label}
                       primaryTypographyProps={{
@@ -266,7 +262,7 @@ export function Sidebar({
       </List>
 
       {/* Demo: Role Switcher */}
-      {!isCollapsed && (
+      {!showCollapsed && (
         <Box sx={{ px: 2, pb: 2 }}>
           <Divider sx={{ mb: 2, borderColor: alpha('#fff', 0.2) }} />
           <Typography
@@ -303,13 +299,13 @@ export function Sidebar({
       {/* Bottom Actions */}
       <Box sx={{ p: 2 }}>
         {/* Logout Button */}
-        <Tooltip title={isCollapsed ? 'Logout' : ''} placement="right">
+        <Tooltip title={showCollapsed ? 'Logout' : ''} placement="right">
           <ListItemButton
             sx={{
               borderRadius: 2,
               py: 1.25,
               mb: 1,
-              justifyContent: isCollapsed ? 'center' : 'flex-start',
+              justifyContent: showCollapsed ? 'center' : 'flex-start',
               color: 'white',
               '&:hover': {
                 backgroundColor: alpha('#fff', 0.1),
@@ -318,13 +314,13 @@ export function Sidebar({
           >
             <ListItemIcon
               sx={{
-                minWidth: isCollapsed ? 0 : 40,
+                minWidth: showCollapsed ? 0 : 40,
                 color: 'white',
               }}
             >
               <LogoutIcon />
             </ListItemIcon>
-            {!isCollapsed && (
+            {!showCollapsed && (
               <ListItemText
                 primary="Logout"
                 primaryTypographyProps={{
@@ -336,41 +332,93 @@ export function Sidebar({
           </ListItemButton>
         </Tooltip>
 
-        {/* Collapse Toggle Button */}
-        <Tooltip title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} placement="right">
-          <ListItemButton
-            onClick={onToggleCollapse}
-            sx={{
-              borderRadius: 2,
-              py: 1.25,
-              justifyContent: isCollapsed ? 'center' : 'flex-start',
-              color: 'white',
-              backgroundColor: alpha('#fff', 0.1),
-              '&:hover': {
-                backgroundColor: alpha('#fff', 0.2),
-              },
-            }}
-          >
-            <ListItemIcon
+        {/* Collapse Toggle Button - Only show on desktop */}
+        {!isMobile && (
+          <Tooltip title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} placement="right">
+            <ListItemButton
+              onClick={onToggleCollapse}
               sx={{
-                minWidth: isCollapsed ? 0 : 40,
+                borderRadius: 2,
+                py: 1.25,
+                justifyContent: showCollapsed ? 'center' : 'flex-start',
                 color: 'white',
+                backgroundColor: alpha('#fff', 0.1),
+                '&:hover': {
+                  backgroundColor: alpha('#fff', 0.2),
+                },
               }}
             >
-              {isCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-            </ListItemIcon>
-            {!isCollapsed && (
-              <ListItemText
-                primary="Collapse"
-                primaryTypographyProps={{
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
+              <ListItemIcon
+                sx={{
+                  minWidth: showCollapsed ? 0 : 40,
+                  color: 'white',
                 }}
-              />
-            )}
-          </ListItemButton>
-        </Tooltip>
+              >
+                {isCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+              </ListItemIcon>
+              {!showCollapsed && (
+                <ListItemText
+                  primary="Collapse"
+                  primaryTypographyProps={{
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
+                  }}
+                />
+              )}
+            </ListItemButton>
+          </Tooltip>
+        )}
       </Box>
+    </>
+  );
+
+  // Mobile: Temporary drawer
+  if (isMobile) {
+    return (
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={onMobileClose}
+        ModalProps={{
+          keepMounted: true, // Better mobile performance
+        }}
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          '& .MuiDrawer-paper': {
+            width: DRAWER_WIDTH,
+            boxSizing: 'border-box',
+            background: colors.gradients.primary,
+            border: 'none',
+          },
+        }}
+      >
+        {drawerContent}
+      </Drawer>
+    );
+  }
+
+  // Desktop: Permanent drawer
+  return (
+    <Drawer
+      variant="permanent"
+      sx={{
+        display: { xs: 'none', md: 'block' },
+        width: drawerWidth,
+        flexShrink: 0,
+        '& .MuiDrawer-paper': {
+          width: drawerWidth,
+          boxSizing: 'border-box',
+          background: colors.gradients.primary,
+          border: 'none',
+          transition: theme.transitions.create('width', {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.enteringScreen,
+          }),
+          overflowX: 'hidden',
+        },
+      }}
+    >
+      {drawerContent}
     </Drawer>
   );
 }
