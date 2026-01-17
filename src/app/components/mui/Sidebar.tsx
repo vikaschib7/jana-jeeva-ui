@@ -101,32 +101,6 @@ export function Sidebar({
         },
       }}
     >
-      {/* Collapse Toggle Button */}
-      <IconButton
-        onClick={onToggleCollapse}
-        sx={{
-          position: 'absolute',
-          right: -12,
-          top: 24,
-          width: 24,
-          height: 24,
-          backgroundColor: 'white',
-          color: colors.primary,
-          boxShadow: 2,
-          zIndex: 1,
-          '&:hover': {
-            backgroundColor: 'white',
-          },
-        }}
-        size="small"
-      >
-        {isCollapsed ? (
-          <ChevronRightIcon fontSize="small" />
-        ) : (
-          <ChevronLeftIcon fontSize="small" />
-        )}
-      </IconButton>
-
       {/* Logo / Header */}
       <Box sx={{ p: 3, pb: 2 }}>
         <Stack
@@ -146,7 +120,7 @@ export function Sidebar({
                   lineHeight: 1.2,
                 }}
               >
-                Society Portal
+                Jana Jeeva Orchid
               </Typography>
               <Typography
                 variant="caption"
@@ -154,7 +128,7 @@ export function Sidebar({
                   color: alpha('#fff', 0.7),
                 }}
               >
-                Management System
+                Society Portal
               </Typography>
             </Box>
           )}
@@ -326,13 +300,15 @@ export function Sidebar({
         </Box>
       )}
 
-      {/* Logout Button */}
+      {/* Bottom Actions */}
       <Box sx={{ p: 2 }}>
+        {/* Logout Button */}
         <Tooltip title={isCollapsed ? 'Logout' : ''} placement="right">
           <ListItemButton
             sx={{
               borderRadius: 2,
               py: 1.25,
+              mb: 1,
               justifyContent: isCollapsed ? 'center' : 'flex-start',
               color: 'white',
               '&:hover': {
@@ -351,6 +327,41 @@ export function Sidebar({
             {!isCollapsed && (
               <ListItemText
                 primary="Logout"
+                primaryTypographyProps={{
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                }}
+              />
+            )}
+          </ListItemButton>
+        </Tooltip>
+
+        {/* Collapse Toggle Button */}
+        <Tooltip title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} placement="right">
+          <ListItemButton
+            onClick={onToggleCollapse}
+            sx={{
+              borderRadius: 2,
+              py: 1.25,
+              justifyContent: isCollapsed ? 'center' : 'flex-start',
+              color: 'white',
+              backgroundColor: alpha('#fff', 0.1),
+              '&:hover': {
+                backgroundColor: alpha('#fff', 0.2),
+              },
+            }}
+          >
+            <ListItemIcon
+              sx={{
+                minWidth: isCollapsed ? 0 : 40,
+                color: 'white',
+              }}
+            >
+              {isCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+            </ListItemIcon>
+            {!isCollapsed && (
+              <ListItemText
+                primary="Collapse"
                 primaryTypographyProps={{
                   fontSize: '0.875rem',
                   fontWeight: 500,
